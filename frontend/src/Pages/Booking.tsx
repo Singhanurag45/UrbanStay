@@ -42,14 +42,19 @@ const Booking = () => {
   const [checkOut, setCheckOut] = useState("");
   const [adultCount, setAdultCount] = useState(1);
   const [childCount, setChildCount] = useState(0);
-
+ 
   // Auth Protection
   useEffect(() => {
     if (!isLoggedIn) {
+      toast.dismiss(); // prevent stacking
       toast.error("Please login to book a hotel");
-      navigate("/login", { state: { from: `/hotel/${hotelId}/booking` } });
+      navigate("/login", {
+        replace: true,
+        state: { from: `/hotel/${hotelId}/booking` },
+      });
     }
-  }, [isLoggedIn, navigate, hotelId]);
+  }, [isLoggedIn, hotelId]);
+  
 
   // Fetch Hotel
   useEffect(() => {
@@ -74,11 +79,13 @@ const Booking = () => {
 
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    const timeDiff = end.getTime() - start.getTime();
-    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const nights =
+      Math.floor(
+        (end.setHours(0,0,0,0) - start.setHours(0,0,0,0)) /
+        (1000 * 60 * 60 * 24)
+    );
 
     if (nights <= 0) return null;
-    
     // Safety check: ensure check-out is after check-in
     if (start >= end) return null;
 
@@ -122,7 +129,14 @@ const Booking = () => {
       toast.success("Booking confirmed successfully!");
       navigate("/my-bookings");
     } catch (error: any) {
-      // Handle the specific "Hotel already booked" 400 error from your controller
+   
+       // Handle the specific "Hotel already booked" 400 error from your controller
+       if (error.response?.status === 400) { 
+        toast.error("Hotel already booked for selected dates");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        console.log("Hotel already booked for selected dates");
+        return;
+      }
       const errorMessage = error.response?.data?.message || "Booking failed. Please try again.";
       toast.error(errorMessage);
     } finally {
@@ -159,7 +173,7 @@ const Booking = () => {
                 alt={hotel.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900 to-transparent h-20" />
+              <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-slate-900 to-transparent h-20" />
             </div>
 
             <div className="p-6">
@@ -226,7 +240,7 @@ const Booking = () => {
                   <input
                     type="date"
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors [color-scheme:dark]"
+                    className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors scheme:dark"
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
                     required
@@ -239,7 +253,7 @@ const Booking = () => {
                   <input
                     type="date"
                     min={checkIn || new Date().toISOString().split("T")[0]}
-                    className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors [color-scheme:dark]"
+                    className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors scheme:dark"
                     value={checkOut}
                     onChange={(e) => setCheckOut(e.target.value)}
                     required
@@ -339,7 +353,6 @@ const Booking = () => {
   );
 };
 
-/* --- Helper Components --- */
 
 // Reusable Guest Stepper Component
 const GuestCounter = ({ label, subLabel, value, onChange, min }: any) => (

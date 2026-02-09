@@ -1,7 +1,20 @@
 import mongoose from "mongoose";
 import Booking from "../models/booking";
 import Hotel from "../models/hotel";
+import HotelAvailability from "../models/hotelAvailability";
 import { Request, Response } from "express";
+
+// Utility: generate date list
+const getDatesBetween = (start: Date, end: Date) => {
+  const dates: Date[] = [];
+  const current = new Date(start);
+
+  while (current < end) {
+    dates.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+};
 
 export const createBooking = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
@@ -10,8 +23,10 @@ export const createBooking = async (req: Request, res: Response) => {
     session.startTransaction();
 
     const { hotelId, checkIn, checkOut, totalCost } = req.body;
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
+
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     // 1️⃣ Check hotel exists
     const hotel = await Hotel.findById(hotelId).session(session);
@@ -20,19 +35,17 @@ export const createBooking = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Hotel not found" });
     }
 
-    // 2️⃣ Check overlapping booking
-    const overlap = await Booking.findOne({
-      hotelId,
-      checkIn: { $lt: end },
-      checkOut: { $gt: start },
-    }).session(session);
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const dates = getDatesBetween(start, end);
 
-    if (overlap) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        message: "Hotel already booked for selected dates",
-      });
-    }
+    // 2️⃣ Lock availability (THIS PREVENTS DOUBLE BOOKING)
+    const availabilityDocs = dates.map((date) => ({
+      hotelId,
+      date,
+    }));
+
+    await HotelAvailability.insertMany(availabilityDocs, { session });
 
     // 3️⃣ Create booking
     await Booking.create(
@@ -49,14 +62,26 @@ export const createBooking = async (req: Request, res: Response) => {
     );
 
     await session.commitTransaction();
-    res.status(201).json({ message: "Booking confirmed" });
-  } catch (error) {
+
+    res.status(201).json({
+      message: "Booking confirmed",
+    });
+  } catch (error: any) {
     await session.abortTransaction();
+
+    // Unique constraint error = already booked
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Hotel already booked for selected dates",
+      });
+    }
+
     res.status(500).json({ message: "Booking failed" });
   } finally {
     session.endSession();
   }
 };
+
 
 export const getMyBookings = async (req: Request, res: Response) => {
   try {
