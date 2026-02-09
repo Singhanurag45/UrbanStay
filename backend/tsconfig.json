@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs" /* Node.js uses CommonJS */,
+    "moduleResolution": "node" /* Critical for finding modules like 'mongoose' */,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true /* Allows 'import mongoose from "mongoose"' */,
+    "skipLibCheck": true /* Skips checking types in node_modules (speeds up build) */,
+    "forceConsistentCasingInFileNames": true
+  }
+}
