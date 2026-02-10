@@ -22,13 +22,18 @@ const AdminDashboard = () => {
   const tooltipStyle = useMemo(() => ({
     backgroundColor: "#0f172a",
     borderColor: "#1e293b",
-    color: "#fff"
+    color: "#fff",
+    borderRadius: "8px"
   }), []);
 
-  const COLORS = useMemo(
-    () => ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'],
-    []
-  );
+  // Defined specific hex codes for consistent branding
+  const CHART_COLORS = useMemo(() => ({
+    green: '#10B981', // Emerald 500
+    red: '#EF4444',   // Red 500
+    blue: '#3B82F6',  // Blue 500
+    purple: '#8B5CF6',// Purple 500
+    amber: '#F59E0B'  // Amber 500
+  }), []);
 
   const monthlyStats = useMemo(() => data?.monthlyStats ?? [], [data]);
   const hotelStats = useMemo(() => data?.hotelStats ?? [], [data]);
@@ -57,7 +62,7 @@ const AdminDashboard = () => {
         </p>
       </header>
 
-      {/* Row 1 */}
+      {/* Row 1: Revenue & Bookings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard title="💰 Revenue Overview" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" aspect={3}>
@@ -66,10 +71,12 @@ const AdminDashboard = () => {
               <YAxis stroke="#64748b" />
               <RechartsTooltip contentStyle={tooltipStyle} />
               <Area
+                type="monotone"
                 dataKey="revenue"
-                stroke="#10B981"
-                fill="#10B981"
-                isAnimationActive={false}
+                stroke={CHART_COLORS.green}
+                fill={CHART_COLORS.green}
+                fillOpacity={0.2}
+                isAnimationActive={true}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -82,27 +89,27 @@ const AdminDashboard = () => {
               <RechartsTooltip contentStyle={tooltipStyle} />
               <Bar
                 dataKey="bookings"
-                fill="#3B82F6"
-                isAnimationActive={false}
+                fill={CHART_COLORS.blue}
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      {/* Row 2 */}
+      {/* Row 2: Top Hotels & Cancellations */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <ChartCard title="🏨 Top Hotels" subtitle="Most booked">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={hotelStats} layout="vertical">
                 <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" width={140} />
+                <YAxis type="category" dataKey="name" width={140} stroke="#cbd5e1" />
                 <RechartsTooltip contentStyle={tooltipStyle} />
                 <Bar
                   dataKey="bookings"
-                  fill="#8B5CF6"
-                  isAnimationActive={false}
+                  fill={CHART_COLORS.purple}
+                  radius={[0, 4, 4, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -110,41 +117,51 @@ const AdminDashboard = () => {
         </div>
 
         <ChartCard title="❌ Cancellations" subtitle="Risk analysis">
-          <ResponsiveContainer width="100%" aspect={1}>
-            <PieChart>
-              <Pie
-                data={cancellationStats}
-                dataKey="value"
-                innerRadius={50}
-                outerRadius={70}
-                isAnimationActive={false}
-              >
-                {cancellationStats.map((_: any, i: number) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Legend />
-              <RechartsTooltip contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <AlertCircle className="opacity-20" size={48} />
+          <div className="h-[260px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={cancellationStats}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                >
+                  {cancellationStats.map((entry: any, index: number) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.name.toLowerCase().includes('cancel') ? CHART_COLORS.red : CHART_COLORS.green} 
+                    />
+                  ))}
+                </Pie>
+                <Legend verticalAlign="bottom" height={36}/>
+                <RechartsTooltip contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+            
+            {/* Center Icon Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none mb-8">
+              <AlertCircle className="text-slate-700 opacity-30" size={32} />
+            </div>
           </div>
         </ChartCard>
       </div>
 
-      {/* Row 3 */}
+      {/* Row 3: User Growth */}
       <ChartCard title="👥 User Growth" subtitle="New registrations">
         <ResponsiveContainer width="100%" aspect={4}>
           <LineChart data={userGrowth}>
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis dataKey="name" stroke="#64748b" />
+            <YAxis stroke="#64748b" />
             <RechartsTooltip contentStyle={tooltipStyle} />
             <Line
+              type="monotone"
               dataKey="users"
-              stroke="#F59E0B"
-              isAnimationActive={false}
+              stroke={CHART_COLORS.amber}
+              strokeWidth={3}
+              dot={{ r: 4, fill: CHART_COLORS.amber }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -71,7 +71,6 @@ const Navbar = () => {
             />
           </div>
         </div>
-
         {/* DESKTOP NAV */}
         <div className="hidden md:flex items-center gap-1 bg-white/5 p-1.5 rounded-full border border-white/5 backdrop-blur-sm">
           <NavItem
@@ -100,12 +99,11 @@ const Navbar = () => {
             <NavItem
               icon={<LayoutDashboard size={18} />}
               label="Admin Panel"
-              active={isActive("/admin/dashboard")}
+              active={location.pathname.startsWith("/admin")}
               onClick={() => handleNavigation("/admin/dashboard")}
             />
           )}
         </div>
-
         {/* DESKTOP AUTH */}
         <div className="hidden md:flex items-center gap-4">
           {!isLoading && isLoggedIn && user ? (
@@ -113,16 +111,30 @@ const Navbar = () => {
               {/* Profile */}
               <button
                 onClick={() => handleNavigation(profilePath)}
-                className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all group"
+                className={`flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border transition-all group ${
+                  isActive(profilePath)
+                    ? "bg-emerald-500 border-emerald-500"
+                    : "bg-slate-800 hover:bg-slate-700 border-slate-700"
+                }`}
               >
-                <div className="bg-emerald-500/20 p-1.5 rounded-full text-emerald-400 group-hover:scale-110 transition-transform">
+                <div
+                  className={`p-1.5 rounded-full group-hover:scale-110 transition-transform ${
+                    isActive(profilePath)
+                      ? "bg-white/20 text-white"
+                      : "bg-emerald-500/20 text-emerald-400"
+                  }`}
+                >
                   <UserCircle size={20} />
                 </div>
                 <div className="text-left leading-none">
-                  <p className="text-sm font-medium text-white">
+                  <p
+                    className={`text-sm font-medium ${isActive(profilePath) ? "text-white" : "text-white"}`}
+                  >
                     {user.firstName}
                   </p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">
+                  <p
+                    className={`text-[10px] font-bold uppercase ${isActive(profilePath) ? "text-emerald-100" : "text-slate-400"}`}
+                  >
                     {user.role}
                   </p>
                 </div>
@@ -138,23 +150,22 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <button
+            <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-full border border-white/5 backdrop-blur-sm">
+              <NavItem
+                icon={<LogIn size={18} />}
+                label="Login"
+                active={isActive("/login")}
                 onClick={() => handleNavigation("/login")}
-                className="flex items-center gap-2 text-slate-300 hover:text-white"
-              >
-                <LogIn size={18} /> Login
-              </button>
-              <button
+              />
+              <NavItem
+                icon={<UserPlus size={18} />}
+                label="Register"
+                active={isActive("/register")}
                 onClick={() => handleNavigation("/register")}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium"
-              >
-                <UserPlus size={18} /> Register
-              </button>
+              />
             </div>
           )}
-        </div>
-
+        </div>{" "}
         {/* MOBILE TOGGLE */}
         <button
           className="md:hidden text-white p-2"
