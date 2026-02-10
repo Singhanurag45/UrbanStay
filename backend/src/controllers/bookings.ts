@@ -134,3 +134,55 @@ export const getAllBookings = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching bookings" });
   }
 };
+
+
+export const cancelBooking = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const booking = await Booking.findById(req.params.id).session(session);
+
+    if (!booking) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.userId.toString() !== req.userId) {
+      await session.abortTransaction();
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (booking.status === "cancelled") {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Booking already cancelled" });
+    }
+
+    // 1️⃣ Update booking status
+    booking.status = "cancelled";
+    await booking.save({ session });
+
+    // 2️⃣ Free hotel availability
+    await HotelAvailability.deleteMany(
+      {
+        hotelId: booking.hotelId,
+        date: {
+          $gte: booking.checkIn,
+          $lt: booking.checkOut,
+        },
+      },
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    res.json({ message: "Booking cancelled successfully" });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Cancel booking error:", error);
+    res.status(500).json({ message: "Failed to cancel booking" });
+  } finally {
+    session.endSession();
+  }
+};

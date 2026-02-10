@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Calendar, MapPin } from "lucide-react";
-import { getMyBookings } from "../api/bookingApi";
+import { Calendar, MapPin, XCircle } from "lucide-react";
+import { getMyBookings, cancelBooking } from "../api/bookingApi";
+import { toast } from "react-toastify";
 
 type BookingType = {
   _id: string;
   checkIn: string;
   checkOut: string;
   totalCost: number;
+  status: "confirmed" | "cancelled";
   hotelId: {
     name: string;
     city: string;
@@ -24,8 +26,8 @@ const MyBookings = () => {
       try {
         const data = await getMyBookings();
         setBookings(data);
-      } catch (error) {
-        console.error("Failed to fetch bookings");
+      } catch {
+        toast.error("Failed to fetch bookings");
       } finally {
         setLoading(false);
       }
@@ -33,6 +35,23 @@ const MyBookings = () => {
 
     fetchBookings();
   }, []);
+
+  const handleCancel = async (bookingId: string) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+
+    try {
+      await cancelBooking(bookingId);
+      toast.success("Booking cancelled successfully");
+
+      setBookings(prev =>
+        prev.map(b =>
+          b._id === bookingId ? { ...b, status: "cancelled" } : b
+        )
+      );
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to cancel booking");
+    }
+  };
 
   if (loading) {
     return (
@@ -58,33 +77,60 @@ const MyBookings = () => {
         {bookings.map((booking) => (
           <div
             key={booking._id}
-            className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex gap-6"
+            className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex justify-between gap-6"
           >
-            <img
-              src={booking.hotelId.imageUrls?.[0]}
-              alt={booking.hotelId.name}
-              className="w-40 h-28 object-cover rounded-lg"
-            />
+            {/* LEFT */}
+            <div className="flex gap-4">
+              <img
+                src={booking.hotelId.imageUrls?.[0]}
+                alt={booking.hotelId.name}
+                className="w-32 h-24 object-cover rounded-xl"
+              />
 
-            <div className="flex-1">
-              <h2 className="text-xl font-bold">{booking.hotelId.name}</h2>
+              <div>
+                <h3 className="font-bold text-lg">
+                  {booking.hotelId.name}
+                </h3>
 
-              <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
-                <MapPin size={14} />
-                {booking.hotelId.city}, {booking.hotelId.country}
-              </div>
+                <p className="text-sm text-slate-400 flex items-center gap-1">
+                  <MapPin size={14} />
+                  {booking.hotelId.city}, {booking.hotelId.country}
+                </p>
 
-              <div className="flex items-center gap-4 text-sm mt-4 text-slate-300">
-                <div className="flex items-center gap-1">
+                <p className="text-sm mt-2 flex items-center gap-1">
                   <Calendar size={14} />
                   {new Date(booking.checkIn).toDateString()} →{" "}
                   {new Date(booking.checkOut).toDateString()}
-                </div>
-              </div>
+                </p>
 
-              <div className="mt-4 font-bold text-emerald-400">
-                Total: ₹{booking.totalCost.toLocaleString()}
+                <p className="mt-2 font-bold text-emerald-400">
+                  ₹{booking.totalCost.toLocaleString()}
+                </p>
               </div>
+            </div>
+
+            {/* RIGHT */}
+            <div className="text-right space-y-3">
+              <span
+                className={`text-sm font-semibold ${
+                  booking.status === "cancelled"
+                    ? "text-red-400"
+                    : "text-emerald-400"
+                }`}
+              >
+                {booking.status.toUpperCase()}
+              </span>
+
+              {booking.status === "confirmed" &&
+                new Date(booking.checkIn) > new Date() && (
+                  <button
+                    onClick={() => handleCancel(booking._id)}
+                    className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm"
+                  >
+                    <XCircle size={16} />
+                    Cancel Booking
+                  </button>
+                )}
             </div>
           </div>
         ))}

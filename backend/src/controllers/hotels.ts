@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Hotel from "../models/hotel";
+import Booking from "../models/booking";
 
 export const searchHotels = async (req: Request, res: Response) => {
   try {
@@ -77,5 +78,25 @@ export const getAllHotels = async (req: Request, res: Response) => {
   } catch (error) {
     console.log("error", error);
     res.status(500).json({ message: "Error fetching hotels" });
+  }
+};
+
+export const getBookedDates = async (req: Request, res: Response) => {
+  try {
+    const { hotelId } = req.params;
+
+    const bookings = await Booking.find({ hotelId }).select(
+      "checkIn checkOut"
+    );
+
+    const bookedRanges = bookings.map(b => ({
+      checkIn: b.checkIn,
+      checkOut: b.checkOut,
+    }));
+
+    res.json(bookedRanges);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch booked dates" });
   }
 };
