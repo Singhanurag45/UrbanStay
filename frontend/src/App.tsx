@@ -14,6 +14,7 @@ import Hotels from "./Pages/Hotels";
 import Profile from "./Pages/Profile";
 import Booking from "./Pages/Booking";
 import MyBookings from "./Pages/MyBookings";
+import PaymentStatus from "./Pages/PaymentStatus";
 
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageHotels from "./Pages/Admin/ManageHotels";
@@ -71,6 +72,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyBookings />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/payment-status"
+            element={
+              <ProtectedRoute>
+                <PaymentStatus />
               </ProtectedRoute>
             }
           />

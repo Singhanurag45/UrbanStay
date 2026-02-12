@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Booking from "../models/booking";
 import User from "../models/user";
-import Hotel from "../models/hotel";
+
 
 export const getDashboardAnalytics = async (req: Request, res: Response) => {
   try {

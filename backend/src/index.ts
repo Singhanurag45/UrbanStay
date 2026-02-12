@@ -10,7 +10,8 @@ import bookingRoutes from "./routes/bookings";
 import myHotelRoutes from "./routes/my-hotels";
 import hotelRoutes from "./routes/hotels";
 import userRoutes from "./routes/users";
-import adminRoutes from "./routes/admin"
+import adminRoutes from "./routes/admin";
+import paymentRoutes from "./routes/payments";
 
 // 1. Connect to Database
 connectDB();
@@ -67,6 +68,7 @@ app.use("/api/users", userRoutes); // If you have user registration
 app.use("/api/my-hotels", myHotelRoutes); // The Owner Dashboard Routes
 app.use("/api/hotels", hotelRoutes); // The Public Search Routes
 app.use("/api/admin", adminRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // 4. Health Check
 app.get("/health", (req: Request, res: Response) => {

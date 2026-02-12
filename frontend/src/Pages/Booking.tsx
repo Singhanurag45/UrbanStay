@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Users,
 } from "lucide-react";
+import { createPaymentOrder } from "../api/paymentApi";
 
 /* ================= TYPES ================= */
 type HotelType = {
@@ -104,7 +105,7 @@ const Booking = () => {
     const nights =
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
 
-    if (nights <= 0) return null;
+    if (nights <= 0 ) return null;
 
     const basePrice = nights * hotel.pricePerNight;
     const tax = Math.round(basePrice * 0.12);
@@ -119,30 +120,68 @@ const Booking = () => {
     };
   }, [checkIn, checkOut, hotel]);
 
-  /* ================= SUBMIT ================= */
+  // Lazy-load Cashfree.js and open checkout
+  const startPayment = async (paymentSessionId: string) => {
+    const ensureCashfree = () =>
+      new Promise<any>((resolve, reject) => {
+        // Reuse instance if already created
+        if ((window as any).cashfreeInstance) {
+          resolve((window as any).cashfreeInstance);
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+        script.async = true;
+        script.onload = () => {
+          const CashfreeGlobal = (window as any).Cashfree;
+          if (!CashfreeGlobal) {
+            reject(new Error("Cashfree SDK failed to load"));
+            return;
+          }
+          const instance = CashfreeGlobal({ mode: "sandbox" }); // or "production"
+          (window as any).cashfreeInstance = instance;
+          resolve(instance);
+        };
+        script.onerror = () => reject(new Error("Failed to load Cashfree SDK"));
+        document.body.appendChild(script);
+      });
+
+    const cashfree = await ensureCashfree();
+
+    await cashfree.checkout({
+      paymentSessionId,
+      returnUrl: `${window.location.origin}/payment-status?order_id={order_id}`,
+    });
+  };
+  /* ================= SUBMIT (CREATE ORDER + OPEN CHECKOUT) ================= */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookingSummary || !checkIn || !checkOut) return;
+    if (!bookingSummary || !checkIn || !checkOut || !hotelId) return;
+    if (checkOut.getTime() - checkIn.getTime() > 30 * 24 * 60 * 60 * 1000){  
+      alert("Stay duration cannot be more than 30 days");
+      return null ;
+    }
 
     setSubmitting(true);
     try {
-      await api.post("/bookings", {
+      const res = await createPaymentOrder({
         hotelId,
-        checkIn,
-        checkOut,
+        checkIn: checkIn.toISOString(),
+        checkOut: checkOut.toISOString(),
         adultCount,
         childCount,
-        totalCost: bookingSummary.total,
       });
 
-      toast.success("Booking confirmed!");
-      navigate("/my-bookings");
+      await startPayment(res.paymentSessionId);
+      // After redirect, Cashfree will take user to /payment-status,
+      // which will confirm the payment and create the booking.
     } catch (error: any) {
-      if (error.response?.status === 400) {
-        toast.error("Hotel already booked for selected dates");
-        return;
-      }
-      toast.error("Booking failed. Please try again.");
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to start payment. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -168,7 +207,6 @@ const Booking = () => {
   return (
     <div className="min-h-screen bg-slate-950 pt-24 pb-20 px-6 text-white">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-
         {/* ================= LEFT CARD ================= */}
         <div className="space-y-6">
           <div className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800">
@@ -229,7 +267,7 @@ const Booking = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <DatePicker
                 selected={checkIn}
-                onChange={(date:any) => setCheckIn(date)}
+                onChange={(date: any) => setCheckIn(date)}
                 filterDate={(date) => !isDateBooked(date)}
                 minDate={new Date()}
                 placeholderText="Check-in"
@@ -237,7 +275,7 @@ const Booking = () => {
               />
               <DatePicker
                 selected={checkOut}
-                onChange={(date:any) => setCheckOut(date)}
+                onChange={(date: any) => setCheckOut(date)}
                 filterDate={(date) => !isDateBooked(date)}
                 minDate={checkIn || new Date()}
                 placeholderText="Check-out"
@@ -301,6 +339,24 @@ const Booking = () => {
             {/* Price */}
             {bookingSummary && (
               <div className="bg-slate-950 p-6 rounded-xl mb-6">
+                 <div className="flex justify-between">
+                  <span>Base Price</span>
+                  <span className="text-emerald-400 font-bold text-xl">
+                    ₹{bookingSummary.basePrice.toLocaleString()}
+                  </span>
+                </div>
+                 <div className="flex justify-between">
+                  <span>Service Fee</span>
+                  <span className="text-emerald-400 font-bold text-xl">
+                    ₹{bookingSummary.serviceFee.toLocaleString()}
+                  </span>
+                </div>
+                 <div className="flex justify-between">
+                  <span>Tax</span>
+                  <span className="text-emerald-400 font-bold text-xl">
+                    ₹{bookingSummary.tax.toLocaleString()}
+                  </span>
+                </div>
                 <div className="flex justify-between">
                   <span>Total</span>
                   <span className="text-emerald-400 font-bold text-xl">
