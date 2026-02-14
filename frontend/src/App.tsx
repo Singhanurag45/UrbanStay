@@ -22,6 +22,7 @@ import Users from "./Pages/Admin/Users";
 import AdminProfile from "./Pages/Admin/AdminProfile";
 import Bookings from "./Pages/Admin/AllBookings";
 import AdminLayout from "./Pages/Admin/AdminLayout";
+import Wishlist from "./components/Wishlist";
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/hotels" element={<Hotels />} />
+          <Route path="/wishlist" element={<Wishlist />} />
 
           {/* User */}
           <Route

@@ -4,7 +4,7 @@ import Booking from "../models/booking";
 
 export const searchHotels = async (req: Request, res: Response) => {
   try {
-    const pageSize = 6;
+    const pageSize = 12;
     const pageNumber = Number(req.query.page) || 1;
     const skip = (pageNumber - 1) * pageSize;
 

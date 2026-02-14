@@ -12,6 +12,7 @@ import {
   X,
   LogIn,
   UserPlus,
+  Heart,
 } from "lucide-react";
 import logoImage from "../assets/logo.png";
 
@@ -22,6 +23,20 @@ const Navbar = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  useEffect(() => {
+    const updateCount = () => {
+      const saved = localStorage.getItem("urbanstay_wishlist");
+      const items = saved ? JSON.parse(saved) : [];
+      setWishlistCount(items.length);
+    };
+
+    updateCount();
+    // Custom event listen karein jo hum HotelCard se trigger karenge
+    window.addEventListener("wishlistUpdated", updateCount);
+    return () => window.removeEventListener("wishlistUpdated", updateCount);
+  }, []);
 
   /* ---------------- Scroll Effect ---------------- */
   useEffect(() => {
@@ -84,6 +99,17 @@ const Navbar = () => {
             label="Hotels"
             active={isActive("/hotels")}
             onClick={() => handleNavigation("/hotels")}
+          />
+          <NavItem
+            icon={
+              <Heart
+                size={18}
+                className={wishlistCount > 0 ? "fill-red-500 text-red-500" : ""}
+              />
+            }
+            label={`Wishlist (${wishlistCount})`}
+            active={isActive("/wishlist")}
+            onClick={() => handleNavigation("/wishlist")}
           />
 
           {isLoggedIn && user?.role !== "admin" && (
