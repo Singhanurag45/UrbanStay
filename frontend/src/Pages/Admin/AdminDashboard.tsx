@@ -117,7 +117,7 @@ const AdminDashboard = () => {
         </div>
 
         <ChartCard title="❌ Cancellations" subtitle="Risk analysis">
-          <div className="h-[260px] w-full relative">
+          <div className="h-65 w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

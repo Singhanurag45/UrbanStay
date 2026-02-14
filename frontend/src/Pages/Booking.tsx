@@ -28,6 +28,9 @@ type HotelType = {
   country: string;
   pricePerNight: number;
   imageUrls: string[];
+  starRating: number;
+  description: string;
+  facilities: string[];
 };
 
 type BookedRange = {
@@ -67,6 +70,7 @@ const Booking = () => {
     const fetchHotel = async () => {
       try {
         const res = await api.get(`/hotels/${hotelId}`);
+        // console.log("Hotel Data:", res.data);
         setHotel(res.data);
       } catch {
         toast.error("Failed to load hotel details");
@@ -105,7 +109,7 @@ const Booking = () => {
     const nights =
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
 
-    if (nights <= 0 ) return null;
+    if (nights <= 0) return null;
 
     const basePrice = nights * hotel.pricePerNight;
     const tax = Math.round(basePrice * 0.12);
@@ -158,9 +162,9 @@ const Booking = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bookingSummary || !checkIn || !checkOut || !hotelId) return;
-    if (checkOut.getTime() - checkIn.getTime() > 30 * 24 * 60 * 60 * 1000){  
+    if (checkOut.getTime() - checkIn.getTime() > 30 * 24 * 60 * 60 * 1000) {
       alert("Stay duration cannot be more than 30 days");
-      return null ;
+      return null;
     }
 
     setSubmitting(true);
@@ -209,36 +213,92 @@ const Booking = () => {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* ================= LEFT CARD ================= */}
         <div className="space-y-6">
-          <div className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800">
-            <img
-              src={hotel.imageUrls?.[0]}
-              alt={hotel.name}
-              className="h-52 w-full object-cover"
-            />
+          <div className="bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+            {/* Image Section */}
+            <div className="relative">
+              <img
+                src={hotel.imageUrls?.[0]}
+                alt={hotel.name}
+                className="h-64 w-full object-cover"
+              />
+              <div className="absolute top-4 right-4 bg-slate-950/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5">
+                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                <span className="text-sm font-bold">{hotel.starRating}</span>
+              </div>
+            </div>
+
+            {/* Content Section */}
             <div className="p-6">
-              <div className="flex justify-between mb-2">
-                <h2 className="text-2xl font-bold">{hotel.name}</h2>
-                <div className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded">
-                  <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                  <span>4.8</span>
+              <div className="mb-4">
+                <h2 className="text-2xl font-extrabold tracking-tight mb-1">
+                  {hotel.name}
+                </h2>
+                <div className="flex items-center gap-1.5 text-slate-400 text-sm">
+                  <MapPin size={14} className="text-emerald-400" />
+                  {hotel.city}, {hotel.country}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-slate-400 text-sm mb-6">
-                <MapPin size={16} />
-                {hotel.city}, {hotel.country}
+              {/* Improved Description with Clamp */}
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  About this hotel
+                </h3>
+                <p
+                  className="text-slate-400 text-sm leading-relaxed line-clamp-3 hover:line-clamp-none transition-all cursor-pointer"
+                  title="Click to expand"
+                >
+                  {hotel.description}
+                </p>
               </div>
 
-              <div className="space-y-3 border-t border-slate-800 pt-4">
-                <div className="flex items-center gap-3 text-sm">
-                  <CheckCircle2 size={16} className="text-emerald-400" />
+              {/* Facilities Grid */}
+              <div className="mb-6 pt-6 border-t border-slate-800">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
+                  Key Facilities
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {hotel.facilities.slice(0, 6).map((facility, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50"
+                    >
+                      <CheckCircle2
+                        size={14}
+                        className="text-emerald-400 shrink-0"
+                      />
+                      <span className="truncate">{facility}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="space-y-3 pt-4 border-t border-slate-800">
+                <div className="flex items-center gap-3 text-xs font-medium text-emerald-400/90 bg-emerald-400/5 p-3 rounded-xl">
+                  <CheckCircle2 size={16} />
                   Free Cancellation until 24h before
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <CheckCircle2 size={16} className="text-emerald-400" />
-                  Instant Confirmation
+                <div className="flex items-center gap-3 text-xs font-medium text-blue-400/90 bg-blue-400/5 p-3 rounded-xl">
+                  <CheckCircle2 size={16} />
+                  Instant Confirmation & E-Receipt
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Security Note */}
+          <div className="bg-linear-to-br from-emerald-500/10 to-blue-500/5 border border-emerald-500/20 p-5 rounded-2xl flex gap-4 items-center">
+            <div className="p-3 bg-emerald-500/20 rounded-xl">
+              <ShieldCheck className="text-emerald-400" size={24} />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-white">
+                Payment Protected
+              </h4>
+              <p className="text-[11px] text-slate-400 leading-tight">
+                Your transaction is secured with 256-bit encryption.
+              </p>
             </div>
           </div>
 
@@ -339,19 +399,19 @@ const Booking = () => {
             {/* Price */}
             {bookingSummary && (
               <div className="bg-slate-950 p-6 rounded-xl mb-6">
-                 <div className="flex justify-between">
+                <div className="flex justify-between">
                   <span>Base Price</span>
                   <span className="text-emerald-400 font-bold text-xl">
                     ₹{bookingSummary.basePrice.toLocaleString()}
                   </span>
                 </div>
-                 <div className="flex justify-between">
+                <div className="flex justify-between">
                   <span>Service Fee</span>
                   <span className="text-emerald-400 font-bold text-xl">
                     ₹{bookingSummary.serviceFee.toLocaleString()}
                   </span>
                 </div>
-                 <div className="flex justify-between">
+                <div className="flex justify-between">
                   <span>Tax</span>
                   <span className="text-emerald-400 font-bold text-xl">
                     ₹{bookingSummary.tax.toLocaleString()}
