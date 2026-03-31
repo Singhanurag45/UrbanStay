@@ -1,6 +1,7 @@
 import express from "express";
-import { check } from "express-validator";
 import verifyToken from "../middleware/auth";
+import { validateZod } from "../middleware/validateZod";
+import { authLoginSchema, authRegisterSchema } from "../validation/zodSchemas";
 import { login, register } from "../controllers/auth";
 
 const router = express.Router();
@@ -8,19 +9,14 @@ const router = express.Router();
 /* LOGIN */
 router.post(
   "/login",
-  [check("email").isEmail(), check("password").isLength({ min: 6 })],
+  validateZod({ body: authLoginSchema }),
   login
 );
 
 /* REGISTER */
 router.post(
   "/register",
-  [
-    check("firstName").notEmpty(),
-    check("lastName").notEmpty(),
-    check("email").isEmail(),
-    check("password").isLength({ min: 6 }),
-  ],
+  validateZod({ body: authRegisterSchema }),
   register
 );
 

@@ -12,6 +12,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { adminHotelFormSchema } from "../../validation/zodSchemas";
 
 // --- TYPES ---
 type HotelType = {
@@ -234,6 +235,12 @@ const HotelFormModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = adminHotelFormSchema.safeParse(formData);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message || "Invalid hotel form");
+      return;
+    }
+
     setIsLoading(true);
 
     const data = new FormData();
