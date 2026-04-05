@@ -1,23 +1,35 @@
 import express from "express";
 import verifyToken from "../middleware/auth";
 import { validateZod } from "../middleware/validateZod";
-import { authLoginSchema, authRegisterSchema } from "../validation/zodSchemas";
-import { login, register } from "../controllers/auth";
+import {
+  authLoginSchema,
+  authSignupRequestSchema,
+  authSignupVerifySchema,
+} from "../validation/zodSchemas";
+import { login, requestSignupOtp, verifySignupOtp } from "../controllers/auth";
 
 const router = express.Router();
 
 /* LOGIN */
-router.post(
-  "/login",
-  validateZod({ body: authLoginSchema }),
-  login
-);
+router.post("/login", validateZod({ body: authLoginSchema }), login);
 
 /* REGISTER */
 router.post(
   "/register",
-  validateZod({ body: authRegisterSchema }),
-  register
+  validateZod({ body: authSignupRequestSchema }),
+  requestSignupOtp,
+);
+
+router.post(
+  "/register/request-otp",
+  validateZod({ body: authSignupRequestSchema }),
+  requestSignupOtp,
+);
+
+router.post(
+  "/register/verify-otp",
+  validateZod({ body: authSignupVerifySchema }),
+  verifySignupOtp,
 );
 
 /* VALIDATE TOKEN */

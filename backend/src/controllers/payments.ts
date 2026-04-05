@@ -6,6 +6,8 @@ import Hotel from "../models/hotel";
 import Booking from "../models/booking";
 import HotelAvailability from "../models/hotelAvailability";
 import PaymentIntent from "../models/paymentIntent";
+import User from "../models/user";
+import { sendBookingConfirmationEmail } from "../config/brevo";
 
 // Shared date range helper (kept in sync with bookings controller)
 const getDatesBetween = (start: Date, end: Date) => {
@@ -25,11 +27,15 @@ const cashfree = new Cashfree(
     ? CFEnvironment.PRODUCTION
     : CFEnvironment.SANDBOX,
   process.env.CASHFREE_APP_ID || "",
-  process.env.CASHFREE_SECRET_KEY || ""
+  process.env.CASHFREE_SECRET_KEY || "",
 );
 
 // Calculate total amount on the backend (must match frontend logic)
-const calculateTotalAmount = (pricePerNight: number, checkIn: Date, checkOut: Date) => {
+const calculateTotalAmount = (
+  pricePerNight: number,
+  checkIn: Date,
+  checkOut: Date,
+) => {
   const nights =
     (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
 
@@ -37,7 +43,7 @@ const calculateTotalAmount = (pricePerNight: number, checkIn: Date, checkOut: Da
     throw new Error("Invalid date range");
   }
 
-  const basePrice = (nights * pricePerNight);
+  const basePrice = nights * pricePerNight;
   const tax = Math.round(basePrice * 0.12);
   const serviceFee = 500;
 
@@ -54,8 +60,7 @@ const calculateTotalAmount = (pricePerNight: number, checkIn: Date, checkOut: Da
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { hotelId, checkIn, checkOut, adultCount, childCount } = req.body;
-    
-    
+
     if (!req.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -66,7 +71,6 @@ export const createOrder = async (req: Request, res: Response) => {
     }
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-
 
     const pricing = calculateTotalAmount(hotel.pricePerNight, start, end);
 
@@ -211,7 +215,7 @@ export const confirmPayment = async (req: Request, res: Response) => {
             totalCost: intent.amount,
           },
         ],
-        { session }
+        { session },
       );
 
       intent.status = "paid";
@@ -220,6 +224,26 @@ export const confirmPayment = async (req: Request, res: Response) => {
 
       await session.commitTransaction();
       session.endSession();
+
+      try {
+        const user = await User.findById(intent.userId)
+          .select("firstName email")
+          .lean();
+
+        if (user) {
+          await sendBookingConfirmationEmail({
+            email: user.email,
+            firstName: user.firstName,
+            hotelName: hotel.name,
+            city: hotel.city,
+            checkIn: intent.checkIn,
+            checkOut: intent.checkOut,
+            totalCost: intent.amount,
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send booking confirmation email:", emailError);
+      }
 
       return res.status(200).json({
         message: "Payment confirmed and booking created",
@@ -239,9 +263,7 @@ export const confirmPayment = async (req: Request, res: Response) => {
 
       if (!isTransient || attempt === MAX_RETRIES) {
         console.error("Confirm payment error:", error);
-        return res
-          .status(500)
-          .json({ message: "Failed to confirm payment" });
+        return res.status(500).json({ message: "Failed to confirm payment" });
       }
 
       // Small backoff before retrying on transient error
@@ -250,5 +272,4 @@ export const confirmPayment = async (req: Request, res: Response) => {
       // Then loop will retry the transaction
     }
   }
-}
-
+};

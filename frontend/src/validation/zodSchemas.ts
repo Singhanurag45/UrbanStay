@@ -10,11 +10,16 @@ export const loginPayloadSchema = z.object({
   password: z.string().min(6),
 });
 
-export const registerPayloadSchema = z.object({
+export const signupRequestPayloadSchema = z.object({
   firstName: z.string().min(1, "firstName is required"),
   lastName: z.string().min(1, "lastName is required"),
   email: z.string().email(),
   password: z.string().min(6),
+});
+
+export const signupVerifyPayloadSchema = z.object({
+  email: z.string().email(),
+  otp: z.string().regex(/^\d{6}$/, "OTP must be a 6 digit code"),
 });
 
 export const createOrderPayloadSchema = z
@@ -29,12 +34,15 @@ export const createOrderPayloadSchema = z
     message: "checkOut must be after checkIn",
     path: ["checkOut"],
   })
-  .refine((data) => {
-    const diffMs =
-      new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime();
-    const days = diffMs / (1000 * 60 * 60 * 24);
-    return days <= 30;
-  }, { message: "Stay duration cannot be more than 30 days" });
+  .refine(
+    (data) => {
+      const diffMs =
+        new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime();
+      const days = diffMs / (1000 * 60 * 60 * 24);
+      return days <= 30;
+    },
+    { message: "Stay duration cannot be more than 30 days" },
+  );
 
 export const confirmPaymentPayloadSchema = z.object({
   orderId: z.string().min(1),
@@ -56,4 +64,3 @@ export const adminHotelFormSchema = z.object({
   adultCount: z.coerce.number().int().min(1),
   childCount: z.coerce.number().int().min(0),
 });
-

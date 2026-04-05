@@ -3,6 +3,8 @@ import Booking from "../models/booking";
 import Hotel from "../models/hotel";
 import HotelAvailability from "../models/hotelAvailability";
 import { Request, Response } from "express";
+import User from "../models/user";
+import { sendBookingConfirmationEmail } from "../config/brevo";
 
 // Utility: generate date list
 const getDatesBetween = (start: Date, end: Date) => {
@@ -58,10 +60,30 @@ export const createBooking = async (req: Request, res: Response) => {
           totalCost,
         },
       ],
-      { session }
+      { session },
     );
 
     await session.commitTransaction();
+
+    try {
+      const user = await User.findById(req.userId)
+        .select("firstName email")
+        .lean();
+
+      if (user) {
+        await sendBookingConfirmationEmail({
+          email: user.email,
+          firstName: user.firstName,
+          hotelName: hotel.name,
+          city: hotel.city,
+          checkIn: start,
+          checkOut: end,
+          totalCost,
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send booking confirmation email:", emailError);
+    }
 
     res.status(201).json({
       message: "Booking confirmed",
@@ -82,14 +104,12 @@ export const createBooking = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getMyBookings = async (req: Request, res: Response) => {
   try {
     if (!req.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     console.log("MY BOOKINGS USER:", req.userId);
-
 
     const bookings = await Booking.find({ userId: req.userId })
       .populate("hotelId", "name city country imageUrls")
@@ -102,7 +122,6 @@ export const getMyBookings = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch bookings" });
   }
 };
-
 
 export const getAllBookings = async (req: Request, res: Response) => {
   try {
@@ -134,7 +153,6 @@ export const getAllBookings = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching bookings" });
   }
 };
-
 
 export const cancelBooking = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
@@ -172,7 +190,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
           $lt: booking.checkOut,
         },
       },
-      { session }
+      { session },
     );
 
     await session.commitTransaction();

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { registerUser } from "../api/auth";
+import { requestSignupOtp, verifySignupOtp } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 import {
   User,
   Mail,
@@ -13,8 +14,11 @@ import {
 } from "lucide-react";
 import logoImage from "../assets/logo.png";
 
+type SignupStage = "details" | "otp";
+
 const Register = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -23,12 +27,21 @@ const Register = () => {
     password: "",
   });
 
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [signupStage, setSignupStage] = useState<SignupStage>("details");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    if (signupStage === "otp") {
+      setSignupStage("details");
+      setOtp("");
+      setStatusMessage("");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,11 +50,27 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      await registerUser(formData);
-      navigate("/login");
+      if (signupStage === "details") {
+        const response = await requestSignupOtp(formData);
+        setSignupStage("otp");
+        setStatusMessage(response.message);
+      } else {
+        const response = await verifySignupOtp({
+          email: formData.email,
+          otp,
+        });
+
+        await login();
+
+        if (response.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }
     } catch (err: any) {
       setError(
-        err.response?.data?.message || "Registration failed. Please try again."
+        err.response?.data?.message || "Registration failed. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -66,7 +95,6 @@ const Register = () => {
                 className="h-8 w-auto object-contain"
               />
             </div>
-           
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
@@ -77,6 +105,12 @@ const Register = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
+          {statusMessage && (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-emerald-300 text-sm">
+              {statusMessage}
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3 text-red-400 text-sm animate-shake">
               <AlertCircle size={18} />
@@ -169,6 +203,30 @@ const Register = () => {
             </div>
           </div>
 
+          {signupStage === "otp" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300 ml-1">
+                Verification Code
+              </label>
+              <div className="relative group">
+                <input
+                  name="otp"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  placeholder="Enter the 6-digit code"
+                  className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-600 tracking-[0.35em] text-center"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 ml-1">
+                Enter the code sent to {formData.email}.
+              </p>
+            </div>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
@@ -178,14 +236,46 @@ const Register = () => {
             {isLoading ? (
               <>
                 <Loader2 size={20} className="animate-spin" />
-                Creating Account...
+                {signupStage === "details"
+                  ? "Sending OTP..."
+                  : "Verifying OTP..."}
               </>
             ) : (
               <>
-                Sign Up <ArrowRight size={20} />
+                {signupStage === "details"
+                  ? "Send OTP"
+                  : "Verify & Create Account"}
+                <ArrowRight size={20} />
               </>
             )}
           </button>
+
+          {signupStage === "otp" && (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={async () => {
+                setError("");
+                setStatusMessage("");
+                setIsLoading(true);
+
+                try {
+                  const response = await requestSignupOtp(formData);
+                  setStatusMessage(response.message);
+                } catch (err: any) {
+                  setError(
+                    err.response?.data?.message ||
+                      "Unable to resend OTP. Please try again.",
+                  );
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="w-full border border-slate-700 text-slate-200 font-semibold py-3 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              Resend OTP
+            </button>
+          )}
         </form>
 
         {/* Footer */}

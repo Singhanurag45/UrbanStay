@@ -1,7 +1,8 @@
 import api from "./axios";
 import {
   loginPayloadSchema,
-  registerPayloadSchema,
+  signupRequestPayloadSchema,
+  signupVerifyPayloadSchema,
 } from "../validation/zodSchemas";
 
 const rejectValidation = (message: string) => {
@@ -26,19 +27,30 @@ export const loginUser = async (data: { email: string; password: string }) => {
   };
 };
 
-/* ================= REGISTER ================= */
-export const registerUser = async (data: {
+/* ================= SIGNUP OTP REQUEST ================= */
+export const requestSignupOtp = async (data: {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
 }) => {
-  const parsed = registerPayloadSchema.safeParse(data);
+  const parsed = signupRequestPayloadSchema.safeParse(data);
   if (!parsed.success) {
     return rejectValidation(parsed.error.issues[0]?.message || "Invalid input");
   }
-  const response = await api.post("/auth/register", data);
+  const response = await api.post("/auth/register/request-otp", data);
+  return response.data as { message: string };
+};
+
+/* ================= SIGNUP OTP VERIFY ================= */
+export const verifySignupOtp = async (data: { email: string; otp: string }) => {
+  const parsed = signupVerifyPayloadSchema.safeParse(data);
+  if (!parsed.success) {
+    return rejectValidation(parsed.error.issues[0]?.message || "Invalid input");
+  }
+  const response = await api.post("/auth/register/verify-otp", data);
   return response.data as {
+    message: string;
     userId: string;
     role: "user" | "admin";
   };

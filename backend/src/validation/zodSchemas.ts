@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-const objectId = z
-  .string()
-  .regex(/^[a-fA-F0-9]{24}$/, "Invalid id format");
+const objectId = z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid id format");
 
 const isoDateString = z
   .string()
@@ -13,11 +11,16 @@ export const authLoginSchema = z.object({
   password: z.string().min(6),
 });
 
-export const authRegisterSchema = z.object({
+export const authSignupRequestSchema = z.object({
   firstName: z.string().min(1, "firstName is required"),
   lastName: z.string().min(1, "lastName is required"),
   email: z.string().email(),
   password: z.string().min(6),
+});
+
+export const authSignupVerifySchema = z.object({
+  email: z.string().email(),
+  otp: z.string().regex(/^\d{6}$/, "OTP must be a 6 digit code"),
 });
 
 export const hotelIdParamSchema = z.object({
@@ -39,7 +42,9 @@ export const cancelBookingParamSchema = z.object({
 export const searchHotelsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   destination: z.string().min(1).optional(),
-  facilities: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+  facilities: z
+    .union([z.string().min(1), z.array(z.string().min(1))])
+    .optional(),
   maxPrice: z.coerce.number().positive().optional(),
 });
 
@@ -68,13 +73,17 @@ export const createOrderBodySchema = z
     message: "checkOut must be after checkIn",
     path: ["checkOut"],
   })
-  .refine((data) => {
-    const diffMs = new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime();
-    const days = diffMs / (1000 * 60 * 60 * 24);
-    return days <= 30;
-  }, {
-    message: "Stay duration cannot be more than 30 days",
-  });
+  .refine(
+    (data) => {
+      const diffMs =
+        new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime();
+      const days = diffMs / (1000 * 60 * 60 * 24);
+      return days <= 30;
+    },
+    {
+      message: "Stay duration cannot be more than 30 days",
+    },
+  );
 
 export const confirmPaymentBodySchema = z.object({
   orderId: z.string().min(1),
@@ -98,4 +107,3 @@ export const myHotelBodySchema = z.object({
   // so we keep it permissive here.
   facilities: z.unknown().optional(),
 });
-

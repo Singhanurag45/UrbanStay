@@ -5,7 +5,8 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 ## 🚀 Features
 
 ### User Features
-- 🔐 User authentication (Register/Login)
+
+- 🔐 User authentication (OTP signup/Register/Login)
 - 🔍 Search hotels by destination, dates, and guests
 - 📅 Book hotels with date selection
 - 👤 User profile management
@@ -13,6 +14,7 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - 🏨 Browse hotel details with images and amenities
 
 ### Admin Features
+
 - 📊 Analytics dashboard with charts and statistics
 - 🏨 Manage hotels (CRUD operations)
 - 👥 User management
@@ -22,6 +24,7 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 19** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
@@ -32,6 +35,7 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - **React Hot Toast** - Notifications
 
 ### Backend
+
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
 - **TypeScript** - Type safety
@@ -39,6 +43,7 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - **Mongoose** - ODM
 - **JWT** - Authentication
 - **Bcrypt** - Password hashing
+- **Brevo** - OTP email delivery
 - **Cloudinary** - Image storage
 - **Multer** - File uploads
 
@@ -78,12 +83,14 @@ HotelBooking/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd HotelBooking
    ```
 
 2. **Install backend dependencies**
+
    ```bash
    cd backend
    npm install
@@ -118,6 +125,11 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:5173
+
+# Brevo OTP emails
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=verified-sender@example.com
+BREVO_SENDER_NAME=UrbanStay
 ```
 
 #### Frontend (.env)
@@ -131,20 +143,25 @@ VITE_API_URL=http://localhost:7000/api
 ### Running the Application
 
 1. **Start the backend server**
+
    ```bash
    cd backend
    npm run dev
    ```
+
    Backend will run on `http://localhost:7000`
 
 2. **Start the frontend development server**
+
    ```bash
    cd frontend
    npm run dev
    ```
+
    Frontend will run on `http://localhost:5173`
 
 3. **Build for production**
+
    ```bash
    # Backend
    cd backend
@@ -187,25 +204,31 @@ VITE_API_URL=http://localhost:7000/api
 ## 📡 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
+
+- `POST /api/auth/register/request-otp` - Request a signup OTP
+- `POST /api/auth/register/verify-otp` - Verify OTP and create the session
 - `POST /api/auth/login` - Login user
 - `POST /api/auth/logout` - Logout user
 
 ### Hotels
+
 - `GET /api/hotels` - Get all hotels
 - `GET /api/hotels/search` - Search hotels
 - `GET /api/hotels/:id` - Get hotel by ID
 
 ### Bookings
+
 - `POST /api/bookings` - Create booking
 - `GET /api/bookings` - Get user bookings
 - `GET /api/bookings/:id` - Get booking by ID
 
 ### User
+
 - `GET /api/users/me` - Get current user
 - `PUT /api/users/me` - Update user profile
 
 ### Admin
+
 - `GET /api/admin/analytics` - Get analytics data
 - `GET /api/admin/users` - Get all users
 - `GET /api/admin/bookings` - Get all bookings
@@ -213,6 +236,7 @@ VITE_API_URL=http://localhost:7000/api
 ## 🔒 Security Features
 
 - JWT-based authentication
+- Email OTP verification for signup
 - Password hashing with bcrypt
 - CORS configuration
 - Input validation
@@ -222,11 +246,13 @@ VITE_API_URL=http://localhost:7000/api
 ## 📝 Scripts
 
 ### Backend
+
 - `npm run dev` - Start development server with nodemon
 - `npm run build` - Compile TypeScript to JavaScript
 - `npm start` - Start production server
 
 ### Frontend
+
 - `npm run dev` - Start Vite development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
