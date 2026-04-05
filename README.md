@@ -1,6 +1,6 @@
 # UrbanStay - Hotel Booking System
 
-A full-stack hotel booking application built with React, TypeScript, Express, and MongoDB. Users can search for hotels, make bookings, manage their profiles, and administrators can manage hotels and view analytics.
+A full-stack hotel booking application built with React, TypeScript, Express, and MongoDB. Users can search for hotels, make bookings, pay online, verify signup with OTP, and administrators can manage hotels and view analytics.
 
 ## 🚀 Features
 
@@ -9,8 +9,10 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - 🔐 User authentication (OTP signup/Register/Login)
 - 🔍 Search hotels by destination, dates, and guests
 - 📅 Book hotels with date selection
+- 💳 Online payment flow with Cashfree
 - 👤 User profile management
 - 📋 View booking history
+- ❤️ Wishlist support
 - 🏨 Browse hotel details with images and amenities
 
 ### Admin Features
@@ -32,7 +34,7 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - **Tailwind CSS** - Styling
 - **Axios** - HTTP client
 - **Recharts** - Data visualization
-- **React Hot Toast** - Notifications
+- **React Toastify** - Notifications
 
 ### Backend
 
@@ -44,8 +46,17 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 - **JWT** - Authentication
 - **Bcrypt** - Password hashing
 - **Brevo** - OTP email delivery
+- **Cashfree** - Payment gateway
 - **Cloudinary** - Image storage
 - **Multer** - File uploads
+
+## 🔁 Key Flows
+
+- Signup uses OTP verification through Brevo before an account becomes active.
+- A welcome email is sent after successful OTP verification.
+- Booking confirmation emails are sent after both direct booking creation and payment confirmation.
+- Hotel booking availability is protected with a dedicated availability collection to prevent double booking.
+- Payments are created with Cashfree and finalized before a booking is written.
 
 ## 📁 Project Structure
 
@@ -53,19 +64,22 @@ A full-stack hotel booking application built with React, TypeScript, Express, an
 HotelBooking/
 ├── frontend/          # React frontend application
 │   ├── src/
-│   │   ├── api/      # API service files
-│   │   ├── components/  # Reusable components
+│   │   ├── api/         # API service files
+│   │   ├── components/  # Reusable UI components
 │   │   ├── context/     # React context providers
-│   │   └── Pages/       # Page components
+│   │   ├── Pages/       # Page components
+│   │   │   └── Admin/   # Admin dashboard pages
+│   │   └── validation/   # Frontend Zod schemas
 │   └── public/      # Static assets
 │
 ├── backend/          # Express backend API
 │   ├── src/
-│   │   ├── config/     # Configuration files
+│   │   ├── config/      # Configuration files
 │   │   ├── controllers/ # Route controllers
 │   │   ├── middleware/  # Custom middleware
 │   │   ├── models/      # Mongoose models
-│   │   └── routes/      # API routes
+│   │   ├── routes/      # API routes
+│   │   └── validation/  # Backend Zod schemas
 │   └── dist/        # Compiled JavaScript
 │
 └── README.md        # This file
@@ -79,6 +93,8 @@ HotelBooking/
 - npm or yarn
 - MongoDB Atlas account (or local MongoDB)
 - Cloudinary account (for image uploads)
+- Brevo account for OTP and transactional emails
+- Cashfree account for payment checkout
 
 ### Installation
 
@@ -130,6 +146,11 @@ FRONTEND_URL=http://localhost:5173
 BREVO_API_KEY=your_brevo_api_key
 BREVO_SENDER_EMAIL=verified-sender@example.com
 BREVO_SENDER_NAME=UrbanStay
+
+# Cashfree payments
+CASHFREE_ENV=SANDBOX
+CASHFREE_APP_ID=your_cashfree_app_id
+CASHFREE_SECRET_KEY=your_cashfree_secret_key
 ```
 
 #### Frontend (.env)
@@ -199,14 +220,16 @@ VITE_API_URL=http://localhost:7000/api
    - `VITE_API_URL`: `https://your-backend.onrender.com/api`
 5. Deploy!
 
-📖 **Detailed deployment guide**: See `DEPLOYMENT_GUIDE.md`
+Make sure the backend environment variables are configured in your hosting provider before deploying.
 
 ## 📡 API Endpoints
 
 ### Authentication
 
+- `POST /api/auth/register` - Alias for signup OTP request
 - `POST /api/auth/register/request-otp` - Request a signup OTP
 - `POST /api/auth/register/verify-otp` - Verify OTP and create the session
+- `GET /api/auth/validate-token` - Validate the current session cookie
 - `POST /api/auth/login` - Login user
 - `POST /api/auth/logout` - Logout user
 
@@ -215,28 +238,46 @@ VITE_API_URL=http://localhost:7000/api
 - `GET /api/hotels` - Get all hotels
 - `GET /api/hotels/search` - Search hotels
 - `GET /api/hotels/:id` - Get hotel by ID
+- `GET /api/hotels/:hotelId/booked-dates` - Get booked dates for a hotel
+
+### My Hotels
+
+- `POST /api/my-hotels` - Create a hotel listing
+- `GET /api/my-hotels` - Get hotels created by the current admin
+- `GET /api/my-hotels/:id` - Get one admin-managed hotel
+- `PUT /api/my-hotels/:id` - Update an admin-managed hotel
+- `DELETE /api/my-hotels/:id` - Delete an admin-managed hotel
 
 ### Bookings
 
 - `POST /api/bookings` - Create booking
-- `GET /api/bookings` - Get user bookings
-- `GET /api/bookings/:id` - Get booking by ID
+- `GET /api/bookings/my` - Get current user bookings
+- `GET /api/bookings/all` - Get all bookings for admin
+- `PATCH /api/bookings/:id/cancel` - Cancel a booking
+
+### Payments
+
+- `POST /api/payments/create-order` - Create a Cashfree payment order
+- `POST /api/payments/confirm` - Confirm payment and create booking
 
 ### User
 
 - `GET /api/users/me` - Get current user
-- `PUT /api/users/me` - Update user profile
+- `GET /api/users` - Get all users for admin
+- `DELETE /api/users/:userId` - Delete a user for admin
 
 ### Admin
 
 - `GET /api/admin/analytics` - Get analytics data
-- `GET /api/admin/users` - Get all users
-- `GET /api/admin/bookings` - Get all bookings
 
 ## 🔒 Security Features
 
 - JWT-based authentication
 - Email OTP verification for signup
+- Welcome email after signup verification
+- Booking confirmation email after successful booking or payment confirmation
+- Cookie-based authentication
+- Transactional booking writes with availability locking
 - Password hashing with bcrypt
 - CORS configuration
 - Input validation
