@@ -45,42 +45,54 @@ export const sendSignupOtpEmail = async ({
     throw new Error("Brevo sender email is not configured");
   }
 
-  await axios.post(
-    "https://api.brevo.com/v3/smtp/email",
-    {
-      sender: {
-        email: senderEmail,
-        name: getBrevoSenderName(),
-      },
-      to: [
-        {
-          email,
-          name: firstName,
+  try {
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          email: senderEmail,
+          name: getBrevoSenderName(),
         },
-      ],
-      subject: "Your UrbanStay verification code",
-      htmlContent: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-          <h2 style="margin-bottom: 16px;">Verify your UrbanStay account</h2>
-          <p>Hi ${firstName},</p>
-          <p>Use the code below to complete your signup:</p>
-          <div style="font-size: 28px; font-weight: 700; letter-spacing: 6px; padding: 16px 20px; background: #e2e8f0; display: inline-block; border-radius: 12px; margin: 12px 0;">
-            ${otp}
+        to: [
+          {
+            email,
+            name: firstName,
+          },
+        ],
+        subject: "Your UrbanStay verification code",
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+            <h2 style="margin-bottom: 16px;">Verify your UrbanStay account</h2>
+            <p>Hi ${firstName},</p>
+            <p>Use the code below to complete your signup:</p>
+            <div style="font-size: 28px; font-weight: 700; letter-spacing: 6px; padding: 16px 20px; background: #e2e8f0; display: inline-block; border-radius: 12px; margin: 12px 0;">
+              ${otp}
+            </div>
+            <p>This code expires in 10 minutes.</p>
+            <p>If you did not request this code, you can ignore this email.</p>
           </div>
-          <p>This code expires in 10 minutes.</p>
-          <p>If you did not request this code, you can ignore this email.</p>
-        </div>
-      `,
-      textContent: `Hi ${firstName}, your UrbanStay verification code is ${otp}. It expires in 10 minutes.`,
-    },
-    {
-      headers: {
-        "api-key": apiKey,
-        "content-type": "application/json",
-        accept: "application/json",
+        `,
+        textContent: `Hi ${firstName}, your UrbanStay verification code is ${otp}. It expires in 10 minutes.`,
       },
-    },
-  );
+      {
+        headers: {
+          "api-key": apiKey,
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+      },
+    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const brevoMessage =
+        (error.response?.data as { message?: string } | undefined)?.message ||
+        error.message;
+
+      throw new Error(`Brevo OTP send failed: ${brevoMessage}`);
+    }
+
+    throw error;
+  }
 };
 
 export const sendWelcomeEmail = async ({

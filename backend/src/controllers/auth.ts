@@ -100,7 +100,13 @@ export const requestSignupOtp = async (req: Request, res: Response) => {
       message: "OTP sent to your email address",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Something went wrong" });
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to send OTP email. Please try again.";
+
+    console.error("Signup OTP request failed:", error);
+    return res.status(500).json({ message });
   }
 };
 
