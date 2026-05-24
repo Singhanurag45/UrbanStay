@@ -71,11 +71,27 @@ export const getHotelById = async (req: Request, res: Response) => {
 // 3. Get All Hotels (Simple List)
 export const getAllHotels = async (req: Request, res: Response) => {
   try {
-    // Fetches all hotels, sorted by newest first
-    // You can add .limit(20) here if you don't want to fetch thousands at once
-    const hotels = await Hotel.find().sort({ lastUpdated: -1 });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
 
-    res.json(hotels);
+    const [hotels, total] = await Promise.all([
+      Hotel.find()
+        .sort({ lastUpdated: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Hotel.countDocuments(),
+    ]);
+
+    res.json({
+      data: hotels,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.log("error", error);
     res.status(500).json({ message: "Error fetching hotels" });

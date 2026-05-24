@@ -30,13 +30,20 @@ type BookingType = {
 const MyBookings = () => {
   const [bookings, setBookings] = useState<BookingType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBookings, setTotalBookings] = useState(0);
+
+  const pageSize = 10;
 
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        const res = await  getALLBookings();
-        setBookings(res);
+        const res = await getALLBookings(currentPage, pageSize);
+        setBookings(res.data ?? []);
+        setTotalPages(res.pagination?.pages ?? 1);
+        setTotalBookings(res.pagination?.total ?? 0);
       } catch (error) {
         console.error("Failed to fetch bookings", error);
       } finally {
@@ -45,7 +52,18 @@ const MyBookings = () => {
     };
 
     fetchBookings();
-  }, []);
+  }, [currentPage]);
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) {
+      return;
+    }
+
+    setCurrentPage(page);
+  };
+
+  const startItem = totalBookings === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalBookings);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 animate-fade-in">
@@ -66,6 +84,15 @@ const MyBookings = () => {
         </div>
       ) : (
         <>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 text-sm text-slate-400">
+            <p>
+              Showing {startItem}-{endItem} of {totalBookings} bookings
+            </p>
+            <p>
+              Page {currentPage} of {totalPages}
+            </p>
+          </div>
+
           {/* Table */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
             <table className="w-full text-left">
@@ -155,6 +182,42 @@ const MyBookings = () => {
               </div>
             )}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition"
+              >
+                Previous
+              </button>
+
+              <div className="flex flex-wrap gap-2 justify-center">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`min-w-10 px-3 py-2 rounded-xl border transition ${
+                      page === currentPage
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "border-slate-700 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -10,6 +10,8 @@ import {
   Image as ImageIcon,
   Save,
   Star,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { adminHotelFormSchema } from "../../validation/zodSchemas";
@@ -39,13 +41,21 @@ const ManageHotels = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<HotelType | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalHotels, setTotalHotels] = useState(0);
+  const pageSize = 10;
 
   // --- FETCH HOTELS ---
   const fetchHotels = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/admin/hotels");
-      setHotels(response.data);
+      const response = await api.get("/admin/hotels", {
+        params: { page, limit: pageSize },
+      });
+      setHotels(response.data.data ?? []);
+      setTotalPages(response.data.pagination?.pages ?? 1);
+      setTotalHotels(response.data.pagination?.total ?? 0);
     } catch (error) {
       toast.error("Error fetching hotels");
     } finally {
@@ -55,7 +65,18 @@ const ManageHotels = () => {
 
   useEffect(() => {
     fetchHotels();
-  }, []);
+  }, [page]);
+
+  const goToPage = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) {
+      return;
+    }
+
+    setPage(nextPage);
+  };
+
+  const startItem = totalHotels === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalHotels);
 
   // --- DELETE HOTEL ---
   const handleDelete = async (hotelId: string) => {
@@ -105,69 +126,104 @@ const ManageHotels = () => {
           <Loader2 className="animate-spin text-emerald-400" size={40} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {hotels.map((hotel) => (
-            <div
-              key={hotel._id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-6 hover:border-slate-700 transition-all"
-            >
-              {/* Image */}
-              <div className="w-full md:w-48 h-32 bg-slate-950 rounded-xl overflow-hidden shrink-0">
-                <img
-                  src={hotel.imageUrls[0]}
-                  alt={hotel.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+        <>
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-slate-400">
+            <p>
+              Showing {startItem}-{endItem} of {totalHotels} hotels
+            </p>
+            <p>
+              Page {page} of {totalPages}
+            </p>
+          </div>
 
-              {/* Content */}
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{hotel.name}</h3>
-                    <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
-                      <MapPin size={14} /> {hotel.city}, {hotel.country}
-                    </p>
+          <div className="grid grid-cols-1 gap-6">
+            {hotels.map((hotel) => (
+              <div
+                key={hotel._id}
+                className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row gap-6 hover:border-slate-700 transition-all"
+              >
+                {/* Image */}
+                <div className="w-full md:w-48 h-32 bg-slate-950 rounded-xl overflow-hidden shrink-0">
+                  <img
+                    src={hotel.imageUrls[0]}
+                    alt={hotel.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{hotel.name}</h3>
+                      <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
+                        <MapPin size={14} /> {hotel.city}, {hotel.country}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded text-xs text-yellow-400">
+                      <Star size={12} fill="currentColor" /> {hotel.starRating}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded text-xs text-yellow-400">
-                    <Star size={12} fill="currentColor" /> {hotel.starRating}
+
+                  <p className="text-slate-500 text-sm mt-3 line-clamp-2">
+                    {hotel.description}
+                  </p>
+
+                  <div className="flex items-center gap-4 mt-4">
+                     <span className="text-emerald-400 font-bold">₹{hotel.pricePerNight}<span className="text-slate-500 text-xs font-normal">/night</span></span>
+                     <span className="text-slate-500 text-xs px-2 py-1 bg-slate-800 rounded border border-slate-700">{hotel.type}</span>
                   </div>
                 </div>
 
-                <p className="text-slate-500 text-sm mt-3 line-clamp-2">
-                  {hotel.description}
-                </p>
-
-                <div className="flex items-center gap-4 mt-4">
-                   <span className="text-emerald-400 font-bold">₹{hotel.pricePerNight}<span className="text-slate-500 text-xs font-normal">/night</span></span>
-                   <span className="text-slate-500 text-xs px-2 py-1 bg-slate-800 rounded border border-slate-700">{hotel.type}</span>
+                {/* Actions */}
+                <div className="flex md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-4">
+                  <button
+                    onClick={() => handleEditClick(hotel)}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-lg text-slate-300 text-sm transition-colors"
+                  >
+                    <Pencil size={16} /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(hotel._id)}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-red-500/10 hover:text-red-400 rounded-lg text-slate-300 text-sm transition-colors"
+                  >
+                    <Trash2 size={16} /> Delete
+                  </button>
                 </div>
               </div>
+            ))}
 
-              {/* Actions */}
-              <div className="flex md:flex-col justify-end gap-2 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-4">
-                <button
-                  onClick={() => handleEditClick(hotel)}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-400 rounded-lg text-slate-300 text-sm transition-colors"
-                >
-                  <Pencil size={16} /> Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(hotel._id)}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-red-500/10 hover:text-red-400 rounded-lg text-slate-300 text-sm transition-colors"
-                >
-                  <Trash2 size={16} /> Delete
-                </button>
+            {hotels.length === 0 && (
+              <div className="text-center py-20 bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed">
+                 <p className="text-slate-500">No hotels found. Create your first one!</p>
               </div>
-            </div>
-          ))}
+            )}
+          </div>
 
-          {hotels.length === 0 && (
-            <div className="text-center py-20 bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed">
-               <p className="text-slate-500">No hotels found. Create your first one!</p>
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-xl border border-slate-800 mt-6">
+              <button
+                onClick={() => goToPage(page - 1)}
+                disabled={page === 1}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium text-white"
+              >
+                <ChevronLeft size={16} /> Previous
+              </button>
+
+              <span className="text-slate-400 text-sm">
+                Page <span className="text-white font-bold">{page}</span> of {totalPages}
+              </span>
+
+              <button
+                onClick={() => goToPage(page + 1)}
+                disabled={page === totalPages}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium text-white"
+              >
+                Next <ChevronRight size={16} />
+              </button>
             </div>
           )}
-        </div>
+        </>
       )}
 
       {/* MODAL FORM */}

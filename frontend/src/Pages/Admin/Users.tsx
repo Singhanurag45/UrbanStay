@@ -24,6 +24,7 @@ type UserType = {
 const Users = () => {
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(0);
   
   // Pagination & Search State
   const [page, setPage] = useState(1);
@@ -49,6 +50,7 @@ const Users = () => {
       );
       setUsers(response.data.data);
       setTotalPages(response.data.pagination.pages);
+      setTotalUsers(response.data.pagination.total);
     } catch (err) {
       console.error("Failed to fetch users");
     } finally {
@@ -91,7 +93,7 @@ const Users = () => {
             User <span className="text-emerald-400">Management</span>
           </h1>
           <p className="text-slate-400">
-            Page {page} of {totalPages} • Total Results: {users.length}
+            Page {page} of {totalPages} • Total Results: {totalUsers}
           </p>
         </div>
         

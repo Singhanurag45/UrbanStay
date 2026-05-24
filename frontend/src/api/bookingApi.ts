@@ -15,9 +15,11 @@ export const getMyBookings = async () => {
   return response.data;
 };
 
-export const getALLBookings = async () => {
-  const response = await api.get("/bookings/all");
-  return response.data.data;
+export const getALLBookings = async (page = 1, limit = 10) => {
+  const response = await api.get("/bookings/all", {
+    params: { page, limit },
+  });
+  return response.data;
 };
 
 export const cancelBooking = async (bookingId: string) => {
