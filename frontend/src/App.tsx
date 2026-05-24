@@ -24,7 +24,6 @@ import Bookings from "./Pages/Admin/AllBookings";
 import AdminLayout from "./Pages/Admin/AdminLayout";
 import Wishlist from "./components/Wishlist";
 
-
 function App() {
   const { pathname } = useLocation();
 
@@ -95,12 +94,15 @@ function App() {
             }
           />
 
-           {/* We wrap them in the Layout here */}
-          <Route path="/admin" element={
-             <ProtectedRoute role="admin">
+          {/* We wrap them in the Layout here */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute role="admin">
                 <AdminLayout />
-             </ProtectedRoute>
-          }>
+              </ProtectedRoute>
+            }
+          >
             {/* These pages will appear inside the <Outlet /> */}
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />

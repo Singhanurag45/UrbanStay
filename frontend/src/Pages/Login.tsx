@@ -21,8 +21,18 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const demoGuestUserCredentials = {
+    email: "assingh.k6@gmail.com",
+    password: "Anurag@123",
+  };
+
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const fillGuestUserCredentials = () => {
+    setEmail(demoGuestUserCredentials.email);
+    setPassword(demoGuestUserCredentials.password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +93,32 @@ const Login = () => {
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3 text-red-400 text-sm animate-shake">
               <AlertCircle size={18} />
               {error}
+            </div>
+          )}
+
+          {import.meta.env.DEV && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-slate-200 space-y-3">
+              <div>
+                <p className="font-semibold text-emerald-300">Guest User Test Login</p>
+                <p className="text-slate-400 text-xs mt-1">
+                  Use this only for local dummy testing.
+                </p>
+              </div>
+              <div className="space-y-1 text-xs text-slate-300">
+                <p>
+                  <span className="text-slate-500">Email:</span> {demoGuestUserCredentials.email}
+                </p>
+                <p>
+                  <span className="text-slate-500">Password:</span> {demoGuestUserCredentials.password}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fillGuestUserCredentials}
+                className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-emerald-300 font-medium hover:bg-emerald-500/20 transition-colors"
+              >
+                Fill Guest User Credentials
+              </button>
             </div>
           )}
 
