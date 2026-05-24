@@ -2,6 +2,26 @@ import { Request, Response } from "express";
 import Booking from "../models/booking";
 import User from "../models/user";
 
+const buildLastSixMonths = () => {
+  const months = [] as Array<{ key: string; name: string; users: number }>;
+
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - offset);
+
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+    months.push({
+      key,
+      name: date.toLocaleString("default", { month: "short" }),
+      users: 0,
+    });
+  }
+
+  return months;
+};
+
 
 export const getDashboardAnalytics = async (req: Request, res: Response) => {
   try {
@@ -56,25 +76,43 @@ export const getDashboardAnalytics = async (req: Request, res: Response) => {
     ]);
 
     // 3. User Growth (Last 6 Months)
+    // User documents do not store timestamps, so we use the ObjectId creation time.
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+
     const userStats = await User.aggregate([
       {
+        $addFields: {
+          createdAtFromId: { $toDate: "$_id" },
+        },
+      },
+      {
+        $match: {
+          createdAtFromId: { $gte: sixMonthsAgo },
+        },
+      },
+      {
         $group: {
-          _id: { month: { $month: "$createdAt" } },
+          _id: {
+            yearMonth: { $dateToString: { format: "%Y-%m", date: "$createdAtFromId" } },
+          },
           users: { $sum: 1 },
         },
       },
-      { $sort: { "_id.month": 1 } },
-      { $limit: 6 }
+      { $sort: { "_id.yearMonth": 1 } },
     ]);
 
-    const formattedUserGrowth = userStats.map(item => {
-        const date = new Date();
-        date.setMonth(item._id.month - 1);
-        return {
-            name: date.toLocaleString('default', { month: 'short' }),
-            users: item.users
-        };
-    });
+    const monthSeries = buildLastSixMonths();
+    const userStatsMap = new Map(
+      userStats.map((item) => [item._id.yearMonth as string, item.users as number]),
+    );
+
+    const formattedUserGrowth = monthSeries.map((month) => ({
+      name: month.name,
+      users: userStatsMap.get(month.key) ?? 0,
+    }));
 
     // 4. Cancellation Stats
     const cancellationStats = await Booking.aggregate([
