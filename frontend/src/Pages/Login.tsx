@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import logoImage from "../assets/logo.png";
 
-
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +56,7 @@ const Login = () => {
       } else {
         setError("Something went wrong. Please try again.");
       }
-    }  finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -80,7 +79,6 @@ const Login = () => {
                 className="h-8 w-auto object-contain"
               />
             </div>
-          
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
@@ -99,17 +97,21 @@ const Login = () => {
           {import.meta.env.DEV && (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-slate-200 space-y-3">
               <div>
-                <p className="font-semibold text-emerald-300">Guest User Test Login</p>
+                <p className="font-semibold text-emerald-300">
+                  Guest User Test Login
+                </p>
                 <p className="text-slate-400 text-xs mt-1">
                   Use this only for local dummy testing.
                 </p>
               </div>
               <div className="space-y-1 text-xs text-slate-300">
                 <p>
-                  <span className="text-slate-500">Email:</span> {demoGuestUserCredentials.email}
+                  <span className="text-slate-500">Email:</span>{" "}
+                  {demoGuestUserCredentials.email}
                 </p>
                 <p>
-                  <span className="text-slate-500">Password:</span> {demoGuestUserCredentials.password}
+                  <span className="text-slate-500">Password:</span>{" "}
+                  {demoGuestUserCredentials.password}
                 </p>
               </div>
               <button
