@@ -44,7 +44,7 @@ const ManageHotels = () => {
   const fetchHotels = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/my-hotels");
+      const response = await api.get("/admin/hotels");
       setHotels(response.data);
     } catch (error) {
       toast.error("Error fetching hotels");
@@ -62,7 +62,7 @@ const ManageHotels = () => {
     if (!window.confirm("Are you sure? This action cannot be undone.")) return;
 
     try {
-      await api.delete(`/my-hotels/${hotelId}`);
+      await api.delete(`/admin/hotels/${hotelId}`);
       toast.success("Hotel deleted!");
       fetchHotels(); // Refresh list
     } catch (error) {
@@ -271,12 +271,12 @@ const HotelFormModal = ({
 
     try {
       if (hotel) {
-        await api.put(`/my-hotels/${hotel._id}`, data, {
+        await api.put(`/admin/hotels/${hotel._id}`, data, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         toast.success("Hotel updated successfully");
       } else {
-        await api.post("/my-hotels", data, {
+        await api.post("/admin/hotels", data, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         toast.success("Hotel created successfully");
