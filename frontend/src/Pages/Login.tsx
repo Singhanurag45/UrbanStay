@@ -20,17 +20,39 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const demoGuestUserCredentials = {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // Demo will use direct login with a guest user's credentials.
+  // WARNING: Hard-coded credentials are insecure for production.
+  const demoCredentials = {
     email: "assingh.k6@gmail.com",
     password: "Anurag@123",
   };
 
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  // User requested direct demo login without backend opt-in — show button always
+  const demoEnabled = true;
 
-  const fillGuestUserCredentials = () => {
-    setEmail(demoGuestUserCredentials.email);
-    setPassword(demoGuestUserCredentials.password);
+  const handleDemoLogin = async () => {
+    setError("");
+    setIsLoading(true);
+    try {
+      const data = await loginUser(demoCredentials);
+      await login();
+
+      if (data.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (err: any) {
+      console.error("Demo login failed", err);
+      if (!navigator.onLine) setError("You appear to be offline. Check your network.");
+      else if (err.response?.status === 401 || err.response?.status === 400) setError("Demo credentials invalid or disabled on server.");
+      else setError("Demo login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,32 +116,24 @@ const Login = () => {
             </div>
           )}
 
-          {import.meta.env.DEV && (
+          {demoEnabled && (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-slate-200 space-y-3">
               <div>
-                <p className="font-semibold text-emerald-300">
-                  Guest User Test Login
-                </p>
-                <p className="text-slate-400 text-xs mt-1">
-                  Use this only for local dummy testing.
-                </p>
+                <p className="font-semibold text-emerald-300">Demo User Login</p>
+                <p className="text-slate-400 text-xs mt-1">One-click demo login (opt-in for production via VITE_ENABLE_GUEST_USER).</p>
               </div>
               <div className="space-y-1 text-xs text-slate-300">
                 <p>
-                  <span className="text-slate-500">Email:</span>{" "}
-                  {demoGuestUserCredentials.email}
-                </p>
-                <p>
-                  <span className="text-slate-500">Password:</span>{" "}
-                  {demoGuestUserCredentials.password}
+                  <span className="text-slate-500">Note:</span> Demo account is for testing and has limited privileges.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={fillGuestUserCredentials}
+                onClick={handleDemoLogin}
+                disabled={isLoading}
                 className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-emerald-300 font-medium hover:bg-emerald-500/20 transition-colors"
               >
-                Fill Guest User Credentials
+                {isLoading ? "Signing in..." : "Login as Demo User"}
               </button>
             </div>
           )}
@@ -140,6 +154,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
           </div>
@@ -168,6 +183,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
