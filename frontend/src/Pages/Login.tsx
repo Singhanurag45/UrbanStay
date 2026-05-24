@@ -47,8 +47,10 @@ const Login = () => {
       }
     } catch (err: any) {
       console.error("Demo login failed", err);
-      if (!navigator.onLine) setError("You appear to be offline. Check your network.");
-      else if (err.response?.status === 401 || err.response?.status === 400) setError("Demo credentials invalid or disabled on server.");
+      if (!navigator.onLine)
+        setError("You appear to be offline. Check your network.");
+      else if (err.response?.status === 401 || err.response?.status === 400)
+        setError("Demo credentials invalid or disabled on server.");
       else setError("Demo login failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -119,12 +121,15 @@ const Login = () => {
           {demoEnabled && (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-slate-200 space-y-3">
               <div>
-                <p className="font-semibold text-emerald-300">Demo User Login</p>
-                <p className="text-slate-400 text-xs mt-1">One-click demo login (opt-in for production via VITE_ENABLE_GUEST_USER).</p>
+                <p className="font-semibold text-emerald-300">
+                  Demo User Login
+                </p>
+                
               </div>
               <div className="space-y-1 text-xs text-slate-300">
                 <p>
-                  <span className="text-slate-500">Note:</span> Demo account is for testing and has limited privileges.
+                  <span className="text-slate-500">Note:</span> Demo account is
+                  for testing and has limited privileges.
                 </p>
               </div>
               <button
