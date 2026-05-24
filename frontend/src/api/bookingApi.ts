@@ -28,5 +28,5 @@ export const cancelBooking = async (bookingId: string) => {
     return rejectValidation(parsed.error.issues[0]?.message || "Invalid input");
   }
   const response = await api.patch(`/bookings/${bookingId}/cancel`);
-  return response.data; 
+  return response.data;
 };

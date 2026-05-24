@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { getALLBookings } from "../../api/bookingApi";
 
-import {
-  MapPin,
-  CreditCard,
-  Loader2,
-  User,
-} from "lucide-react";
+import { MapPin, CreditCard, Loader2, User } from "lucide-react";
 
 type BookingType = {
   _id: string;
@@ -119,8 +114,7 @@ const MyBookings = () => {
                       </div>
                       <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
                         <MapPin size={14} />
-                        {booking.hotelId?.city},{" "}
-                        {booking.hotelId?.country}
+                        {booking.hotelId?.city}, {booking.hotelId?.country}
                       </div>
                     </td>
 
@@ -128,8 +122,7 @@ const MyBookings = () => {
                     <td className="p-6">
                       <div className="flex items-center gap-2 text-white">
                         <User size={16} className="text-emerald-400" />
-                        {booking.userId?.firstName}{" "}
-                        {booking.userId?.lastName}
+                        {booking.userId?.firstName} {booking.userId?.lastName}
                       </div>
                       <div className="text-xs text-slate-500 ml-6 mt-1">
                         {booking.userId?.email}
@@ -157,11 +150,8 @@ const MyBookings = () => {
                     {/* Amount */}
                     <td className="p-6">
                       <div className="flex items-center gap-2 text-white font-bold">
-                        <CreditCard
-                          size={18}
-                          className="text-emerald-500"
-                        />
-                        ₹{booking.totalCost.toLocaleString()}
+                        <CreditCard size={18} className="text-emerald-500" />₹
+                        {booking.totalCost.toLocaleString()}
                       </div>
                     </td>
 
@@ -194,7 +184,10 @@ const MyBookings = () => {
               </button>
 
               <div className="flex flex-wrap gap-2 justify-center">
-                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1,
+                ).map((page) => (
                   <button
                     key={page}
                     onClick={() => goToPage(page)}

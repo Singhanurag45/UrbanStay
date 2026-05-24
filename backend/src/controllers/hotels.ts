@@ -13,10 +13,7 @@ export const searchHotels = async (req: Request, res: Response) => {
 
     if (req.query.destination) {
       const destination = req.query.destination.toString().toLowerCase();
-      query.$or = [
-        { cityLower: destination },
-        { countryLower: destination },
-      ];
+      query.$or = [{ cityLower: destination }, { countryLower: destination }];
     }
 
     if (req.query.facilities) {
@@ -56,7 +53,6 @@ export const searchHotels = async (req: Request, res: Response) => {
   }
 };
 
-
 // 2. Get Single Hotel Detail
 export const getHotelById = async (req: Request, res: Response) => {
   try {
@@ -67,7 +63,6 @@ export const getHotelById = async (req: Request, res: Response) => {
   }
 };
 
-
 // 3. Get All Hotels (Simple List)
 export const getAllHotels = async (req: Request, res: Response) => {
   try {
@@ -76,11 +71,7 @@ export const getAllHotels = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     const [hotels, total] = await Promise.all([
-      Hotel.find()
-        .sort({ lastUpdated: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      Hotel.find().sort({ lastUpdated: -1 }).skip(skip).limit(limit).lean(),
       Hotel.countDocuments(),
     ]);
 
@@ -102,11 +93,9 @@ export const getBookedDates = async (req: Request, res: Response) => {
   try {
     const { hotelId } = req.params;
 
-    const bookings = await Booking.find({ hotelId }).select(
-      "checkIn checkOut"
-    );
+    const bookings = await Booking.find({ hotelId }).select("checkIn checkOut");
 
-    const bookedRanges = bookings.map(b => ({
+    const bookedRanges = bookings.map((b) => ({
       checkIn: b.checkIn,
       checkOut: b.checkOut,
     }));
@@ -208,7 +197,9 @@ export const deleteAdminHotel = async (req: Request, res: Response) => {
     // Delete hotel
     await Hotel.findByIdAndDelete(hotelId);
 
-    res.status(200).json({ message: "Hotel and associated bookings deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Hotel and associated bookings deleted successfully" });
   } catch (error) {
     console.error("Admin delete hotel error:", error);
     res.status(500).json({ message: "Error deleting hotel" });

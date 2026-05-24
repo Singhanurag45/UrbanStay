@@ -33,8 +33,26 @@ type HotelType = {
 };
 
 // --- CONSTANTS ---
-const HOTEL_TYPES = ["Budget", "Boutique", "Luxury", "Resort", "Business", "Family", "Romantic", "Cabin"];
-const HOTEL_FACILITIES = ["Free WiFi", "Parking", "Airport Shuttle", "Family Rooms", "Non-Smoking Rooms", "Outdoor Pool", "Spa", "Fitness Center"];
+const HOTEL_TYPES = [
+  "Budget",
+  "Boutique",
+  "Luxury",
+  "Resort",
+  "Business",
+  "Family",
+  "Romantic",
+  "Cabin",
+];
+const HOTEL_FACILITIES = [
+  "Free WiFi",
+  "Parking",
+  "Airport Shuttle",
+  "Family Rooms",
+  "Non-Smoking Rooms",
+  "Outdoor Pool",
+  "Spa",
+  "Fitness Center",
+];
 
 const ManageHotels = () => {
   const [hotels, setHotels] = useState<HotelType[]>([]);
@@ -110,7 +128,9 @@ const ManageHotels = () => {
           <h1 className="text-3xl font-bold text-white mb-2">
             Manage <span className="text-emerald-400">Hotels</span>
           </h1>
-          <p className="text-slate-400">Add new properties or edit existing ones.</p>
+          <p className="text-slate-400">
+            Add new properties or edit existing ones.
+          </p>
         </div>
         <button
           onClick={handleAddClick}
@@ -155,7 +175,9 @@ const ManageHotels = () => {
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-xl font-bold text-white">{hotel.name}</h3>
+                      <h3 className="text-xl font-bold text-white">
+                        {hotel.name}
+                      </h3>
                       <p className="text-slate-400 text-sm flex items-center gap-1 mt-1">
                         <MapPin size={14} /> {hotel.city}, {hotel.country}
                       </p>
@@ -170,8 +192,15 @@ const ManageHotels = () => {
                   </p>
 
                   <div className="flex items-center gap-4 mt-4">
-                     <span className="text-emerald-400 font-bold">₹{hotel.pricePerNight}<span className="text-slate-500 text-xs font-normal">/night</span></span>
-                     <span className="text-slate-500 text-xs px-2 py-1 bg-slate-800 rounded border border-slate-700">{hotel.type}</span>
+                    <span className="text-emerald-400 font-bold">
+                      ₹{hotel.pricePerNight}
+                      <span className="text-slate-500 text-xs font-normal">
+                        /night
+                      </span>
+                    </span>
+                    <span className="text-slate-500 text-xs px-2 py-1 bg-slate-800 rounded border border-slate-700">
+                      {hotel.type}
+                    </span>
                   </div>
                 </div>
 
@@ -195,7 +224,9 @@ const ManageHotels = () => {
 
             {hotels.length === 0 && (
               <div className="text-center py-20 bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed">
-                 <p className="text-slate-500">No hotels found. Create your first one!</p>
+                <p className="text-slate-500">
+                  No hotels found. Create your first one!
+                </p>
               </div>
             )}
           </div>
@@ -211,7 +242,8 @@ const ManageHotels = () => {
               </button>
 
               <span className="text-slate-400 text-sm">
-                Page <span className="text-white font-bold">{page}</span> of {totalPages}
+                Page <span className="text-white font-bold">{page}</span> of{" "}
+                {totalPages}
               </span>
 
               <button
@@ -267,8 +299,12 @@ const HotelFormModal = ({
     imageUrls: hotel?.imageUrls || [], // Existing URLs
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-     setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFacilityChange = (facility: string) => {
@@ -315,11 +351,11 @@ const HotelFormModal = ({
     });
 
     // Append existing Image URLs (backend needs to know which old images to keep)
-    // Note: Your backend update logic assumes standard file upload, 
+    // Note: Your backend update logic assumes standard file upload,
     // usually you send imageUrls separately or handle merge in backend.
     // For this specific backend snippet provided earlier, it appends new files.
     // Ideally, pass existing URLs back if backend supports deleting specific images.
-    
+
     // Append New Image Files
     Array.from(formData.imageFiles).forEach((imageFile) => {
       data.append("imageFiles", imageFile);
@@ -328,12 +364,12 @@ const HotelFormModal = ({
     try {
       if (hotel) {
         await api.put(`/admin/hotels/${hotel._id}`, data, {
-            headers: { "Content-Type": "multipart/form-data" }
+          headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Hotel updated successfully");
       } else {
         await api.post("/admin/hotels", data, {
-            headers: { "Content-Type": "multipart/form-data" }
+          headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Hotel created successfully");
       }
@@ -354,7 +390,10 @@ const HotelFormModal = ({
           <h2 className="text-2xl font-bold text-white">
             {hotel ? "Edit Hotel" : "Add New Hotel"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
             <X size={24} />
           </button>
         </div>
@@ -362,18 +401,36 @@ const HotelFormModal = ({
         {/* Modal Body (Scrollable) */}
         <div className="p-6 overflow-y-auto custom-scrollbar">
           <form id="hotel-form" onSubmit={handleSubmit} className="space-y-6">
-            
             {/* Basic Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="space-y-1">
                 <span className="text-sm font-bold text-slate-400">Name</span>
-                <input type="text" name="name" value={formData.name} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                />
               </label>
               <label className="space-y-1">
                 <span className="text-sm font-bold text-slate-400">Type</span>
-                <select name="type" value={formData.type} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none">
-                    <option value="" disabled>Select Type</option>
-                    {HOTEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="" disabled>
+                    Select Type
+                  </option>
+                  {HOTEL_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -381,101 +438,181 @@ const HotelFormModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="space-y-1">
                 <span className="text-sm font-bold text-slate-400">City</span>
-                <input type="text" name="city" value={formData.city} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none" />
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                />
               </label>
               <label className="space-y-1">
-                <span className="text-sm font-bold text-slate-400">Country</span>
-                <input type="text" name="country" value={formData.country} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none" />
+                <span className="text-sm font-bold text-slate-400">
+                  Country
+                </span>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                />
               </label>
             </div>
 
             <label className="block space-y-1">
-                <span className="text-sm font-bold text-slate-400">Description</span>
-                <textarea name="description" rows={4} value={formData.description} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none" />
+              <span className="text-sm font-bold text-slate-400">
+                Description
+              </span>
+              <textarea
+                name="description"
+                rows={4}
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+              />
             </label>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="space-y-1">
-                <span className="text-sm font-bold text-slate-400">Price Per Night (₹)</span>
-                <input type="number" name="pricePerNight" min={1} value={formData.pricePerNight} onChange={handleInputChange} required className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none" />
+                <span className="text-sm font-bold text-slate-400">
+                  Price Per Night (₹)
+                </span>
+                <input
+                  type="number"
+                  name="pricePerNight"
+                  min={1}
+                  value={formData.pricePerNight}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                />
               </label>
               <label className="space-y-1">
-                <span className="text-sm font-bold text-slate-400">Star Rating</span>
-                <select name="starRating" value={formData.starRating} onChange={handleInputChange} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none">
-                    {[1,2,3,4,5].map(num => <option key={num} value={num}>{num} Stars</option>)}
+                <span className="text-sm font-bold text-slate-400">
+                  Star Rating
+                </span>
+                <select
+                  name="starRating"
+                  value={formData.starRating}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-emerald-500 outline-none"
+                >
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <option key={num} value={num}>
+                      {num} Stars
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
 
             {/* Facilities */}
             <div>
-                <span className="text-sm font-bold text-slate-400 block mb-2">Facilities</span>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {HOTEL_FACILITIES.map((facility) => (
-                        <label key={facility} className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2 rounded cursor-pointer hover:border-emerald-500/50">
-                            <input 
-                                type="checkbox" 
-                                value={facility} 
-                                checked={formData.facilities.includes(facility)}
-                                onChange={() => handleFacilityChange(facility)}
-                                className="accent-emerald-500 w-4 h-4"
-                            />
-                            <span className="text-sm text-slate-300">{facility}</span>
-                        </label>
-                    ))}
-                </div>
+              <span className="text-sm font-bold text-slate-400 block mb-2">
+                Facilities
+              </span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {HOTEL_FACILITIES.map((facility) => (
+                  <label
+                    key={facility}
+                    className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2 rounded cursor-pointer hover:border-emerald-500/50"
+                  >
+                    <input
+                      type="checkbox"
+                      value={facility}
+                      checked={formData.facilities.includes(facility)}
+                      onChange={() => handleFacilityChange(facility)}
+                      className="accent-emerald-500 w-4 h-4"
+                    />
+                    <span className="text-sm text-slate-300">{facility}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
-             {/* Guests */}
-             <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                 <label className="space-y-1">
-                    <span className="text-sm font-bold text-slate-400">Adults</span>
-                    <input type="number" name="adultCount" min={1} value={formData.adultCount} onChange={handleInputChange} required className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-                 </label>
-                 <label className="space-y-1">
-                    <span className="text-sm font-bold text-slate-400">Children</span>
-                    <input type="number" name="childCount" min={0} value={formData.childCount} onChange={handleInputChange} required className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-                 </label>
-             </div>
+            {/* Guests */}
+            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <label className="space-y-1">
+                <span className="text-sm font-bold text-slate-400">Adults</span>
+                <input
+                  type="number"
+                  name="adultCount"
+                  min={1}
+                  value={formData.adultCount}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-sm font-bold text-slate-400">
+                  Children
+                </span>
+                <input
+                  type="number"
+                  name="childCount"
+                  min={0}
+                  value={formData.childCount}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                />
+              </label>
+            </div>
 
             {/* Images */}
             <div>
-                <span className="text-sm font-bold text-slate-400 block mb-2">Images</span>
-                <div className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center bg-slate-950 hover:bg-slate-900 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                    <ImageIcon className="mx-auto text-slate-500 mb-2" size={32} />
-                    <p className="text-slate-400 text-sm">Click to upload images</p>
-                    <input 
-                        type="file" 
-                        multiple 
-                        accept="image/*" 
-                        className="hidden" 
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                    />
+              <span className="text-sm font-bold text-slate-400 block mb-2">
+                Images
+              </span>
+              <div
+                className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center bg-slate-950 hover:bg-slate-900 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImageIcon className="mx-auto text-slate-500 mb-2" size={32} />
+                <p className="text-slate-400 text-sm">Click to upload images</p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
+              </div>
+              {formData.imageFiles.length > 0 && (
+                <div className="mt-2 text-sm text-emerald-400">
+                  {formData.imageFiles.length} new images selected
                 </div>
-                {formData.imageFiles.length > 0 && (
-                     <div className="mt-2 text-sm text-emerald-400">
-                        {formData.imageFiles.length} new images selected
-                     </div>
-                )}
+              )}
             </div>
-
           </form>
         </div>
 
         {/* Modal Footer */}
         <div className="p-6 border-t border-slate-800 bg-slate-950/50 rounded-b-2xl flex justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-slate-300 font-bold hover:text-white transition-colors">
-                Cancel
-            </button>
-            <button 
-                form="hotel-form" 
-                disabled={isLoading} 
-                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2 transition-all disabled:opacity-50"
-            >
-                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                Save Hotel
-            </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-slate-300 font-bold hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            form="hotel-form"
+            disabled={isLoading}
+            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2 transition-all disabled:opacity-50"
+          >
+            {isLoading ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : (
+              <Save size={20} />
+            )}
+            Save Hotel
+          </button>
         </div>
       </div>
     </div>

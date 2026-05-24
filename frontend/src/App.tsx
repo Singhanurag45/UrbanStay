@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -26,6 +26,14 @@ import Wishlist from "./components/Wishlist";
 
 
 function App() {
+  const { pathname } = useLocation();
+
+  const showFAQ =
+    pathname === "/" ||
+    pathname === "/hotels" ||
+    pathname === "/wishlist" ||
+    pathname.startsWith("/hotel/");
+
   return (
     <>
       <Navbar />
@@ -111,7 +119,7 @@ function App() {
         </Routes>
       </div>
 
-      <FAQ/>
+      {showFAQ && <FAQ />}
 
       <Footer />
     </>
